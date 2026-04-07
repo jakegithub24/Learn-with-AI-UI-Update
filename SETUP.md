@@ -28,8 +28,11 @@ venv\Scripts\activate  # Windows
 
 # Install packages
 pip install -r requirments.txt
-```
 
+# OR
+
+pip install langchain_community langchain_core langchain langchain_huggingface langchain_huggingface flask langchain_google_genai sentence-transformers Chroma chromadb bs4
+```
 ### 4. Run the App
 ```bash
 python app.py

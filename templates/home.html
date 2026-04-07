@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn with AI - AI-Powered Learning Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --dark-bg: #0a0e27;
+            --light-bg: #111827;
+            --text-white: #ffffff;
+            --text-gray: #d1d5db;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #0f172a 50%, #1a1f3a 100%);
+            color: var(--text-white);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header & Navigation */
+        header {
+            padding: 24px 40px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            text-decoration: none;
+            color: var(--text-white);
+        }
+
+        .logo i {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .cta-btn {
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            color: var(--text-white);
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 40px;
+            width: 100%;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            margin-bottom: 100px;
+        }
+
+        .hero-content h1 {
+            font-size: 56px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 24px;
+        }
+
+        .hero-content p {
+            font-size: 18px;
+            color: var(--text-gray);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            max-width: 500px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            color: var(--text-white);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: #818cf8;
+        }
+
+        .hero-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            height: 400px;
+        }
+
+        .visual-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 350px;
+            backdrop-filter: blur(10px);
+        }
+
+        .visual-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .visual-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        .visual-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .visual-line {
+            height: 10px;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.3) 0%, transparent 100%);
+            border-radius: 4px;
+        }
+
+        .visual-line.short {
+            width: 60%;
+        }
+
+        /* Features Section */
+        .features {
+            margin-bottom: 100px;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-size: 44px;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+
+        .section-title p {
+            font-size: 18px;
+            color: var(--text-gray);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.6) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(99, 102, 241, 0.4);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--text-white);
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .feature-card p {
+            font-size: 15px;
+            color: var(--text-gray);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* Stats Section */
+        .stats {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 20px;
+            padding: 60px 40px;
+            margin-bottom: 100px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 40px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary) 0%, #818cf8 100%);
+            border-radius: 20px;
+            padding: 80px 40px;
+            text-align: center;
+            margin-bottom: 100px;
+        }
+
+        .cta-section h2 {
+            font-size: 44px;
+            font-weight: 900;
+            margin-bottom: 24px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(10, 14, 39, 0.8);
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+            padding: 40px;
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero {
+                grid-template-columns: 1fr;
+                gap: 60px;
+                margin-bottom: 60px;
+            }
+
+            .hero-content h1 {
+                font-size: 42px;
+            }
+
+            .section-title h2 {
+                font-size: 36px;
+            }
+
+            .cta-section {
+                padding: 60px 30px;
+            }
+
+            main {
+                padding: 60px 30px;
+            }
+
+            header {
+                padding: 20px 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+
+            .nav-links {
+                gap: 16px;
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero {
+                margin-bottom: 40px;
+            }
+
+            .hero-content h1 {
+                font-size: 32px;
+            }
+
+            .hero-content p {
+                font-size: 16px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .hero-visual {
+                height: 300px;
+            }
+
+            .section-title h2 {
+                font-size: 28px;
+            }
+
+            main {
+                padding: 40px 20px;
+            }
+
+            .features {
+                margin-bottom: 60px;
+            }
+
+            .stats {
+                padding: 40px 20px;
+                margin-bottom: 60px;
+            }
+
+            .cta-section {
+                padding: 40px 20px;
+                margin-bottom: 60px;
+                border-radius: 12px;
+            }
+
+            .cta-section h2 {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 16px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .nav-link {
+                font-size: 14px;
+            }
+
+            .hero-content h1 {
+                font-size: 24px;
+            }
+
+            .hero-content p {
+                font-size: 14px;
+            }
+
+            .section-title h2 {
+                font-size: 24px;
+            }
+
+            .section-title p {
+                font-size: 14px;
+            }
+
+            .feature-card {
+                padding: 24px;
+            }
+
+            .feature-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
+
+            .feature-card h3 {
+                font-size: 18px;
+            }
+
+            .feature-card p {
+                font-size: 13px;
+            }
+
+            .stat-value {
+                font-size: 32px;
+            }
+
+            main {
+                padding: 30px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">
+                <i class="fas fa-brain"></i>
+                <span>Learn with AI</span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#stats" class="nav-link">Impact</a>
+                <a href="/app" class="cta-btn">
+                    <i class="fas fa-rocket"></i>
+                    Launch App
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>
+                    Learn Smarter with AI
+                    <i class="fas fa-sparkles" style="color: var(--secondary);"></i>
+                </h1>
+                <p>Upload your learning materials and get personalized AI tutoring tailored to your pace and learning style. Master anything faster.</p>
+
+                <div class="hero-buttons">
+                    <a href="/app" class="btn btn-primary">
+                        <i class="fas fa-play"></i>
+                        Start Learning Now
+                    </a>
+                    <a href="#features" class="btn btn-secondary">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="visual-card">
+                    <div class="visual-header">
+                        <div class="visual-dot"></div>
+                        <div class="visual-dot"></div>
+                        <div class="visual-dot"></div>
+                    </div>
+                    <div class="visual-body">
+                        <div class="visual-line"></div>
+                        <div class="visual-line"></div>
+                        <div class="visual-line short"></div>
+                        <div class="visual-line"></div>
+                        <div class="visual-line short"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="section-title">
+                <h2>Powerful Features</h2>
+                <p>Everything you need for effective learning</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <h3>Upload & Learn</h3>
+                    <p>Upload PDFs, documents, or paste content. Our AI instantly processes and personalizes your learning experience.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>AI Tutor</h3>
+                    <p>Get personalized explanations, instant answers, and adaptive guidance that matches your learning style.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Track Progress</h3>
+                    <p>Monitor your learning journey with detailed insights and keep building on your strengths.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3>Customizable</h3>
+                    <p>Choose your preferred tone and difficulty level. Learn the way that works best for you.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure & Private</h3>
+                    <p>Your data is encrypted and kept private. No ads, no tracking, pure learning.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Lightning Fast</h3>
+                    <p>Get instant responses and real-time feedback. Learn at your own pace, 24/7.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section id="stats" class="stats">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">10K+</div>
+                    <div class="stat-label">Active Learners</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">95%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">24/7</div>
+                    <div class="stat-label">AI Support</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <h2>Ready to Transform Your Learning?</h2>
+            <p>Join thousands of learners who are mastering new skills with AI. Start for free and see the difference personalized learning makes.</p>
+            <a href="/app" class="btn btn-primary">
+                <i class="fas fa-rocket"></i>
+                Launch the App
+            </a>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Learn with AI. Powered by advanced AI technology. <a href="/" style="color: var(--primary); text-decoration: none;">Learn more →</a></p>
+    </footer>
+
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

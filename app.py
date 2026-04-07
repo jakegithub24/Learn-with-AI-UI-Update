@@ -1,27 +1,69 @@
+#jai shree ram 
 """
 Learn with AI - Flask Application
 A RAG-based learning assistant with multi-document support
 """
 
 from flask import Flask, render_template, request, jsonify, session
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import os
 import tempfile
 import shutil
 from datetime import datetime, timedelta
 
 # Load environment variables
-load_dotenv()
-os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
-os.environ["LANGCHAIN_TRACKING_V2"] = "true"
+
+# load_dotenv()
+# os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
+
+# LangSmith configuration
+os.environ["LANGSMITH_API_KEY"] ="your_langsmith_api_key_here"
+os.environ["LANGSMITH_TRACING"] = "true" # its not a boolean value but a string, so use "true" or "false"
+os.environ["LANGSMITH_PROJECT"]="project_name_here"
+
+#hugging face login to access private models
+from huggingface_hub import login
+HF_TOKEN = ""
+login(token= HF_TOKEN)
 
 # Import necessary modules
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.llms import HuggingFacePipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+
+# Custom modules
 from tones import PROMPT_MAP, LEVELS
 from vectordatabase import ingest_documents
 
+# Load HuggingFace Model 
+model_id = "rajtembe13/Llama-3.2-3B-TUTOR-gsm8k"
+#custom fine-tuned model on openai's GSM8K dataset for better reasoning and step-by-step explanations.
+print("Loading model...")
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_id,
+    device_map="auto",
+    torch_dtype="auto"
+)
+
+pipe = pipeline(
+    "text-generation",
+    model=model,
+    tokenizer=tokenizer,
+    max_new_tokens=512,
+    do_sample=True,
+    temperature=0.7
+)
+
+llm = HuggingFacePipeline(pipeline=pipe)
+print("Model loaded successfully")
+
+
+# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "learn-with-ai-secret-key-2026")
 
@@ -39,12 +81,12 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 # Global variables for session management
 session_data = {}
 
-
+# check if file extension is allowed
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
+# Session management functions
 def create_session():
     """Create a new user session"""
     session_id = datetime.now().strftime("%Y%m%d%H%M%S%f")
@@ -69,13 +111,18 @@ def cleanup_old_sessions():
     for session_id in to_delete:
         del session_data[session_id]
 
-
+# Routes
 @app.route('/')
+def home():
+    """Home page with app information"""
+    return render_template('home.html')
+
+@app.route('/app')
 def index():
-    """Main page"""
+    """Main application page"""
     return render_template('index.html', tones=list(PROMPT_MAP.keys()), levels=LEVELS)
 
-
+# API routes for session management, document upload, and question answering
 @app.route('/api/session/create', methods=['POST'])
 def create_session_route():
     """Create a new session"""
@@ -89,7 +136,7 @@ def create_session_route():
         "levels": LEVELS
     })
 
-
+# Update settings route
 @app.route('/api/settings/update', methods=['POST'])
 def update_settings():
     """Update tone and level settings"""
@@ -116,7 +163,7 @@ def update_settings():
         "level": level
     })
 
-
+# Document upload route
 @app.route('/api/documents/upload', methods=['POST'])
 def upload_documents():
     """Upload documents"""
@@ -173,7 +220,7 @@ def upload_documents():
         "errors": errors
     })
 
-
+# List documents route
 @app.route('/api/documents/list', methods=['GET'])
 def list_documents():
     """List uploaded documents"""
@@ -188,7 +235,7 @@ def list_documents():
         "total": len(documents)
     })
 
-
+# Ingest documents route
 @app.route('/api/documents/ingest', methods=['POST'])
 def ingest_documents_route():
     """Ingest documents into vector database"""
@@ -248,7 +295,7 @@ def ingest_documents_route():
             "error": f"Error ingesting documents: {str(e)}"
         }), 500
 
-
+# Ask question route 
 @app.route('/api/chat/ask', methods=['POST'])
 def ask_question():
     """Ask a question to the AI"""
@@ -279,11 +326,11 @@ def ask_question():
         prompt = PromptTemplate.from_template(prompt_template)
 
         # Initialize LLM
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
-            temperature=0.4
-        )
-
+        # llm = ChatGoogleGenerativeAI(
+        #     model="gemini-2.5-flash",
+        #     temperature=0.4
+        # )
+        
         # Create chain
         output_parser = StrOutputParser()
         chain = prompt | llm | output_parser
