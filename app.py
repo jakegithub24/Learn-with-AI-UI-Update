@@ -22,6 +22,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from tones import PROMPT_MAP, LEVELS
 from vectordatabase import ingest_documents
 
+from sentence_transformers import CrossEncoder
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "learn-with-ai-secret-key-2026")
 
@@ -289,8 +292,40 @@ def ask_question():
         chain = prompt | llm | output_parser
 
         # Search for context
-        context_docs = db.similarity_search(question, k=4)
-        context = "\n".join([doc.page_content for doc in context_docs])
+        docs = db.similarity_search(
+            question,
+            k=10
+        )
+
+        # Prepare query-doc pairs
+        pairs = [
+            [user_message, doc.page_content]
+            for doc in docs
+        ]
+
+        # Get reranking scores
+        scores = reranker.predict(pairs)
+
+        # Combine docs + scores
+        scored_docs = list(zip(docs, scores))
+
+        # Sort by relevance
+        scored_docs = sorted(
+            scored_docs,
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        # Keep top reranked docs
+        reranked_docs = [
+            doc for doc, score in scored_docs[:3]
+        ]
+
+        # Join context into text
+        context = "\n\n".join({
+            doc.page_content
+            for doc in reranked_docs
+        })
 
         # Generate response
         response = chain.invoke({
