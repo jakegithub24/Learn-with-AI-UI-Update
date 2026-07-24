@@ -6,13 +6,24 @@ A RAG-based learning assistant with multi-document support
 from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
 import os
+import secrets
 import tempfile
 import shutil
 from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
-os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
+
+# .env.example / SETUP.md / readme.md all instruct users to set GEMINI_API_KEY,
+# so read that here. langchain-google-genai itself looks for GOOGLE_API_KEY,
+# so we forward the value into that variable for the library to pick up.
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+if not GEMINI_API_KEY:
+    raise RuntimeError(
+        "GEMINI_API_KEY is not set. Create a .env file (see .env.example) "
+        "with GEMINI_API_KEY=your_api_key_here and restart the app."
+    )
+os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 os.environ["LANGCHAIN_TRACKING_V2"] = "true"
 
 # Import necessary modules
@@ -26,7 +37,7 @@ from sentence_transformers import CrossEncoder
 reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "learn-with-ai-secret-key-2026")
+app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
 
 # Configuration
 UPLOAD_FOLDER = "uploads"
@@ -299,7 +310,7 @@ def ask_question():
 
         # Prepare query-doc pairs
         pairs = [
-            [user_message, doc.page_content]
+            [question, doc.page_content]
             for doc in docs
         ]
 
@@ -321,11 +332,11 @@ def ask_question():
             doc for doc, score in scored_docs[:3]
         ]
 
-        # Join context into text
-        context = "\n\n".join({
+        # Join context into text, preserving rerank order
+        context = "\n\n".join(
             doc.page_content
             for doc in reranked_docs
-        })
+        )
 
         # Generate response
         response = chain.invoke({
@@ -341,7 +352,7 @@ def ask_question():
             "response": response,
             "tone": tone,
             "level": level,
-            "sources": len(context_docs)
+            "sources": len(reranked_docs)
         })
 
     except Exception as e:
