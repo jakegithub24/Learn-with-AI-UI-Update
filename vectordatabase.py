@@ -5,12 +5,12 @@ from langchain_huggingface import HuggingFaceEmbeddings
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 
 from langchain_community.document_loaders import (
     PyPDFLoader,
     TextLoader,
     CSVLoader,
-    JSONLoader,
     WebBaseLoader   # BeautifulSoupWebLoader
 )
 
@@ -55,29 +55,28 @@ def load_csv(file_path):
 
 def load_json(file_path):
     import json
-    try:
-        # First, try to validate the JSON file
-        with open(file_path, 'r', encoding='utf-8') as f:
-            json.load(f)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON file {file_path}: {str(e)}")
-    
-    # If valid, use JSONLoader with correct jq schema
-    # Use "." to load the entire JSON, or "[].field" for arrays
-    try:
-        loader = JSONLoader(file_path, jq_schema=".")
-        docs = loader.load()
-    except Exception as e:
-        # Fallback: try to load as array
-        try:
-            loader = JSONLoader(file_path, jq_schema=".[]")
-            docs = loader.load()
-        except Exception:
-            raise ValueError(f"Could not parse JSON file {file_path}: {str(e)}")
 
-    for doc in docs:
-        doc.metadata["source"] = file_path
-        doc.metadata["source_type"] = "json"
+    with open(file_path, 'r', encoding='utf-8') as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON file {file_path}: {str(e)}")
+
+    # Treat a top-level list as one record per item; anything else (a single
+    # object, a bare string, etc.) as one record.
+    records = data if isinstance(data, list) else [data]
+
+    docs = []
+    for i, record in enumerate(records):
+        # Plain strings are used as-is; objects/lists are serialized so their
+        # keys stay attached to their values as readable, embeddable text
+        # (e.g. a {"question": ..., "answer": ...} record stays one coherent
+        # chunk instead of being unparseable or silently dropped).
+        content = record if isinstance(record, str) else json.dumps(record, ensure_ascii=False, indent=2)
+        docs.append(Document(
+            page_content=content,
+            metadata={"source": file_path, "source_type": "json", "row": i}
+        ))
 
     return docs
 
@@ -142,6 +141,9 @@ def ingest_documents(
         except Exception as e:
             raise ValueError(f"Error loading wiki link {link}: {str(e)}")
 
+    if not all_documents:
+        raise ValueError("No content could be loaded from the provided files/links.")
+
     # Split ALL documents together
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -149,6 +151,9 @@ def ingest_documents(
     )
 
     chunks = splitter.split_documents(all_documents)
+
+    if not chunks:
+        raise ValueError("Documents were loaded but contained no usable text to ingest.")
 
     # Create ONE vector DB
     db = Chroma.from_documents(
