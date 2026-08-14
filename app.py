@@ -3,7 +3,7 @@ Learn with AI - Flask Application
 A RAG-based learning assistant with multi-document support
 """
 
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, send_from_directory
 from dotenv import load_dotenv
 import os
 import secrets
@@ -18,23 +18,42 @@ load_dotenv()
 # so read that here. langchain-google-genai itself looks for GOOGLE_API_KEY,
 # so we forward the value into that variable for the library to pick up.
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-if not GEMINI_API_KEY:
+TEST_MODE = os.getenv('TEST_MODE', '').lower() in ('1', 'true', 'yes')
+
+# Allow running in TEST_MODE when external credentials or dependencies are unavailable.
+if not GEMINI_API_KEY and not TEST_MODE:
     raise RuntimeError(
         "GEMINI_API_KEY is not set. Create a .env file (see .env.example) "
-        "with GEMINI_API_KEY=your_api_key_here and restart the app."
+        "with GEMINI_API_KEY=your_api_key_here and restart the app, or set TEST_MODE=1 to run a UI-only server."
     )
-os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
-os.environ["LANGCHAIN_TRACKING_V2"] = "true"
+
+if GEMINI_API_KEY:
+    os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+    os.environ["LANGCHAIN_TRACKING_V2"] = "true"
 
 # Import necessary modules
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
-from tones import PROMPT_MAP, LEVELS
-from vectordatabase import ingest_documents
+try:
+    from langchain_core.prompts import PromptTemplate
+    from langchain_core.output_parsers import StrOutputParser
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except Exception:
+    PromptTemplate = None
+    StrOutputParser = None
+    ChatGoogleGenerativeAI = None
 
-from sentence_transformers import CrossEncoder
-reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+from tones import PROMPT_MAP, LEVELS
+
+# vectordatabase is lightweight in this repo; keep import but tolerate failures during TEST_MODE runs
+try:
+    from vectordatabase import ingest_documents
+except Exception:
+    ingest_documents = None
+
+try:
+    from sentence_transformers import CrossEncoder
+    reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+except Exception:
+    reranker = None
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
@@ -272,6 +291,8 @@ def ask_question():
 
     data = request.json
     question = data.get('question', '').strip()
+    # Optional: restrict retrieval to selected sources (list of document names or paths)
+    source_ids = data.get('source_ids') or []
 
     if not question:
         return jsonify({"success": False, "error": "Question cannot be empty"}), 400
@@ -288,62 +309,69 @@ def ask_question():
         tone = session_data[session_id]['tone']
         level = session_data[session_id]['level']
 
-        # Get prompt template
+        # Get prompt template (if available)
         prompt_template = PROMPT_MAP.get(tone, PROMPT_MAP['default'])
-        prompt = PromptTemplate.from_template(prompt_template)
-
-        # Initialize LLM
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
-            temperature=0.4
-        )
-
-        # Create chain
-        output_parser = StrOutputParser()
-        chain = prompt | llm | output_parser
 
         # Search for context
-        docs = db.similarity_search(
-            question,
-            k=10
-        )
+        docs = db.similarity_search(question, k=10)
 
-        # Prepare query-doc pairs
-        pairs = [
-            [question, doc.page_content]
-            for doc in docs
-        ]
+        # If the client provided source_ids (names or paths), filter the retrieved
+        # chunks to only those that originate from the selected sources.
+        if source_ids:
+            allowed_paths = set()
+            for docmeta in session_data[session_id]['documents']:
+                if docmeta.get('name') in source_ids or docmeta.get('path') in source_ids:
+                    allowed_paths.add(docmeta.get('path'))
+            if allowed_paths:
+                docs = [d for d in docs if d.metadata.get('source') in allowed_paths]
 
-        # Get reranking scores
-        scores = reranker.predict(pairs)
+        if not docs:
+            return jsonify({
+                "success": False,
+                "error": "No retrievable chunks found for the question with the selected sources."
+            }), 400
 
-        # Combine docs + scores
-        scored_docs = list(zip(docs, scores))
-
-        # Sort by relevance
-        scored_docs = sorted(
-            scored_docs,
-            key=lambda x: x[1],
-            reverse=True
-        )
-
-        # Keep top reranked docs
-        reranked_docs = [
-            doc for doc, score in scored_docs[:3]
-        ]
+        # Rerank if reranker is available
+        if reranker is not None:
+            pairs = [[question, doc.page_content] for doc in docs]
+            scores = reranker.predict(pairs)
+            scored_docs = list(zip(docs, scores))
+            scored_docs = sorted(scored_docs, key=lambda x: x[1], reverse=True)
+            reranked_docs = [doc for doc, score in scored_docs[:3]]
+        else:
+            # Fallback: take first three retrieved docs
+            scored_docs = [(doc, 0.0) for doc in docs]
+            reranked_docs = docs[:3]
 
         # Join context into text, preserving rerank order
-        context = "\n\n".join(
-            doc.page_content
-            for doc in reranked_docs
-        )
+        context = "\n\n".join(doc.page_content for doc in reranked_docs)
 
-        # Generate response
-        response = chain.invoke({
-            "context": context,
-            "question": question,
-            "level": level
-        })
+        # Generate response using available LLM or a TEST_MODE stub
+        if ChatGoogleGenerativeAI is not None and PromptTemplate is not None and StrOutputParser is not None:
+            prompt = PromptTemplate.from_template(prompt_template)
+            llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
+            output_parser = StrOutputParser()
+            chain = prompt | llm | output_parser
+            response = chain.invoke({"context": context, "question": question, "level": level})
+        else:
+            # Deterministic test-mode response for UI validation
+            snippet = context[:800].replace('\n', ' ')
+            response = f"(TEST MODE) Simulated answer to: {question}\n\nContext excerpt: {snippet}"
+
+        # Build citation metadata from top-ranked chunks
+        citations = []
+        for doc, score in (scored_docs[:3] if scored_docs else [(d, 0.0) for d in reranked_docs]):
+            m = getattr(doc, 'metadata', {}) or {}
+            citation = {
+                "source": m.get('source'),
+                "source_type": m.get('source_type'),
+                "score": float(score)
+            }
+            if 'page' in m:
+                citation['page'] = m.get('page')
+            if 'row' in m:
+                citation['row'] = m.get('row')
+            citations.append(citation)
 
         session_data[session_id]['last_activity'] = datetime.now()
 
@@ -352,7 +380,8 @@ def ask_question():
             "response": response,
             "tone": tone,
             "level": level,
-            "sources": len(reranked_docs)
+            "sources": len(reranked_docs),
+            "citations": citations
         })
 
     except Exception as e:
@@ -427,6 +456,32 @@ def not_found(error):
 def internal_error(error):
     """Handle 500 errors"""
     return jsonify({"success": False, "error": "Internal server error"}), 500
+
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    """Serve uploaded files from the uploads folder."""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+@app.route('/api/studio/generate', methods=['POST'])
+def studio_generate():
+    """Placeholder endpoint for Studio artifact generation.
+
+    Returns 501 when backend generation is not implemented yet.
+    """
+    data = request.json or {}
+    artifact_type = data.get('type')
+    # For now, acknowledge request and return not-implemented
+    return jsonify({
+        "success": False,
+        "error": "Studio generation not implemented on backend",
+        "required": {
+            "type": "string",
+            "sources": "array of source ids or names",
+            "instructions": "optional prompt"
+        }
+    }), 501
 
 
 if __name__ == '__main__':

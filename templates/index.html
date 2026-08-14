@@ -3,266 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn with AI - Intelligent Learning Assistant</title>
+    <title>Learn with AI - Notebook Workspace</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://unpkg.com/lucide@0.262.0/dist/lucide.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-brain"></i>
-                    <h1>Learn AI</h1>
+    <div class="app-shell">
+        <aside class="sidebar glass-panel">
+            <div class="brand-block">
+                <div class="brand-mark"><i data-lucide="book-open"></i></div>
+                <div>
+                    <div class="brand-name">Learn with AI</div>
+                    <div class="brand-subtitle">Your AI notebook</div>
                 </div>
-                <p class="tagline">Your Personal Learning Assistant</p>
             </div>
 
-            <nav class="sidebar-nav">
-                <button class="nav-btn active" data-tab="setup">
-                    <i class="fas fa-sliders-h"></i>
-                    <span>Setup</span>
-                </button>
-                <button class="nav-btn" data-tab="documents">
-                    <i class="fas fa-file-upload"></i>
-                    <span>Documents</span>
-                </button>
-                <button class="nav-btn" data-tab="chat">
-                    <i class="fas fa-comments"></i>
-                    <span>Chat</span>
-                </button>
-                <button class="nav-btn" data-tab="history">
-                    <i class="fas fa-history"></i>
-                    <span>History</span>
-                </button>
+            <nav class="sidebar-nav" aria-label="Sidebar navigation">
+                <div class="nav-group">
+                    <button class="nav-btn" data-panel="sources" aria-label="Sources" onclick="showPanel('sources')">
+                        <i data-lucide="layers"></i>
+                        <span>Sources</span>
+                    </button>
+                    <button class="nav-btn" data-panel="chat" aria-label="Chat" onclick="showPanel('chat')">
+                        <i data-lucide="message-circle"></i>
+                        <span>Chat</span>
+                    </button>
+                    <button class="nav-btn" data-panel="studio" aria-label="Studio" onclick="showPanel('studio')">
+                        <i data-lucide="flask-conical"></i>
+                        <span>Studio</span>
+                    </button>
+                </div>
+
+                <div class="nav-group nav-group-spacer">
+                    <button class="nav-btn nav-btn-muted" type="button" onclick="showPanel('sources')">
+                        <i data-lucide="home"></i>
+                        <span>Home</span>
+                    </button>
+                    <button class="nav-btn nav-btn-muted" type="button" onclick="showPanel('sources')">
+                        <i data-lucide="book"></i>
+                        <span>Library</span>
+                    </button>
+                    <button class="nav-btn nav-btn-muted" type="button" onclick="showPanel('sources')">
+                        <i data-lucide="clock-3"></i>
+                        <span>Recent</span>
+                    </button>
+                </div>
             </nav>
 
             <div class="sidebar-footer">
-                <button class="reset-btn" onclick="resetSession()">
-                    <i class="fas fa-redo"></i>
-                    <span>New Session</span>
+                <button class="ghost-btn" type="button" onclick="resetSession()" title="New session">
+                    <i data-lucide="refresh-cw"></i>
                 </button>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Setup Tab -->
-            <section id="setup" class="tab-content active">
-                <div class="tab-header">
-                    <h2><i class="fas fa-sliders-h"></i> Setup Your Learning Preferences</h2>
-                    <p>Configure your AI assistant's tone and your learning level</p>
-                </div>
-
-                <div class="setup-grid">
-                    <!-- Tone Selection -->
-                    <div class="setup-card">
-                        <div class="card-header">
-                            <i class="fas fa-microphone"></i>
-                            <h3>AI Tone</h3>
-                        </div>
-                        <p class="card-description">Choose how the AI should communicate with you</p>
-                        <div class="tone-options">
-                            {% for tone in tones %}
-                            <button class="tone-btn" data-tone="{{ tone }}" onclick="selectTone('{{ tone }}')">
-                                <span class="tone-icon">
-                                    {% if tone == 'default' %}
-                                        <i class="fas fa-balance-scale"></i>
-                                    {% elif tone == 'professional' %}
-                                        <i class="fas fa-briefcase"></i>
-                                    {% elif tone == 'informal' %}
-                                        <i class="fas fa-thumbs-up"></i>
-                                    {% elif tone == 'encouraging' %}
-                                        <i class="fas fa-star"></i>
-                                    {% endif %}
-                                </span>
-                                <span class="tone-name">{{ tone|capitalize }}</span>
-                                <span class="tone-desc">
-                                    {% if tone == 'default' %}
-                                        Balanced approach
-                                    {% elif tone == 'professional' %}
-                                        Academic & technical
-                                    {% elif tone == 'informal' %}
-                                        Friendly & casual
-                                    {% elif tone == 'encouraging' %}
-                                        Motivating & supportive
-                                    {% endif %}
-                                </span>
-                            </button>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- Level Selection -->
-                    <div class="setup-card">
-                        <div class="card-header">
-                            <i class="fas fa-graduation-cap"></i>
-                            <h3>Learning Level</h3>
-                        </div>
-                        <p class="card-description">Select your expertise level</p>
-                        <div class="level-options">
-                            {% for level in levels %}
-                            <button class="level-btn" data-level="{{ level }}" onclick="selectLevel('{{ level }}')">
-                                <span class="level-icon">
-                                    {% if level == 'beginner' %}
-                                        <i class="fas fa-seedling"></i>
-                                    {% elif level == 'intermediate' %}
-                                        <i class="fas fa-mountain"></i>
-                                    {% elif level == 'advanced' %}
-                                        <i class="fas fa-rocket"></i>
-                                    {% endif %}
-                                </span>
-                                <span class="level-name">{{ level|capitalize }}</span>
-                                <span class="level-desc">
-                                    {% if level == 'beginner' %}
-                                        Starting out
-                                    {% elif level == 'intermediate' %}
-                                        Some experience
-                                    {% elif level == 'advanced' %}
-                                        Expert level
-                                    {% endif %}
-                                </span>
-                            </button>
-                            {% endfor %}
+        <div class="main-column">
+            <header class="topbar glass-panel">
+                <div class="topbar-left">
+                    <div class="notebook-pill">
+                        <i data-lucide="book-text"></i>
+                        <div>
+                            <strong id="notebookTitle">My Notebook</strong>
+                            <small id="notebookSubtitle">• 0 sources</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="info-box">
-                    <i class="fas fa-lightbulb"></i>
-                    <p>Your preferences will be applied to all responses. You can change them at any time!</p>
-                </div>
-            </section>
-
-            <!-- Documents Tab -->
-            <section id="documents" class="tab-content">
-                <div class="tab-header">
-                    <h2><i class="fas fa-file-upload"></i> Document Management</h2>
-                    <p>Upload documents or add wiki links for AI to learn from</p>
+                <div class="search-wrap">
+                    <i class="search-icon" data-lucide="search"></i>
+                    <input id="globalSearch" type="text" placeholder="Search this notebook... (Ctrl/Cmd+K)">
                 </div>
 
-                <div class="documents-container">
-                    <!-- Upload Section -->
-                    <div class="upload-section">
-                        <div class="upload-card">
-                            <div class="upload-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <h3>Upload Documents</h3>
-                            <p>Supported formats: PDF, TXT, CSV, JSON</p>
-                            <div class="upload-area" id="uploadArea">
-                                <input type="file" id="fileInput" multiple accept=".pdf,.txt,.csv,.json" hidden>
-                                <i class="fas fa-plus"></i>
-                                <p>Click to browse or drag files here</p>
-                                <span class="file-size-note">Max 50MB per file</span>
-                            </div>
-                            <button class="btn btn-primary mt-3" onclick="document.getElementById('fileInput').click()">
-                                <i class="fas fa-folder-open"></i> Select Files
-                            </button>
-                        </div>
-
-                        <div class="divider">
-                            <span>OR</span>
-                        </div>
-
-                        <div class="wiki-card">
-                            <div class="wiki-icon">
-                                <i class="fas fa-globe"></i>
-                            </div>
-                            <h3>Add Wiki Link</h3>
-                            <p>Add Wikipedia or other wiki links</p>
-                            <div class="wiki-input-group">
-                                <input type="url" id="wikiInput" placeholder="https://en.wikipedia.org/wiki/..." class="wiki-input">
-                                <button class="btn btn-secondary" onclick="addWikiLink()">
-                                    <i class="fas fa-plus"></i> Add Link
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Documents List -->
-                    <div class="documents-list-section">
-                        <h3>Uploaded Documents</h3>
-                        <div id="documentsList" class="documents-list">
-                            <p class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                No documents uploaded yet
-                            </p>
-                        </div>
-
-                        <div id="ingestStatus" class="ingest-status" style="display: none;">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Processing documents...</p>
-                        </div>
-
-                        <button class="btn btn-success btn-large" onclick="ingestDocuments()" id="ingestBtn" style="display: none;">
-                            <i class="fas fa-check"></i> Ingest & Process Documents
-                        </button>
-                    </div>
-                </div>
-
-                <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
-                    <p>After uploading documents, click "Ingest & Process" to prepare them for AI learning.</p>
-                </div>
-            </section>
-
-            <!-- Chat Tab -->
-            <section id="chat" class="tab-content">
-                <div class="tab-header">
-                    <h2><i class="fas fa-comments"></i> Chat with AI</h2>
-                    <p>Ask questions about your documents</p>
-                </div>
-
-                <div class="chat-container">
-                    <div id="chatMessages" class="chat-messages">
-                        <div class="chat-welcome">
-                            <i class="fas fa-robot"></i>
-                            <h3>Welcome to Learn with AI</h3>
-                            <p>Upload documents first, then start asking questions!</p>
-                        </div>
-                    </div>
-
-                    <div class="chat-input-area">
-                        <div class="chat-status" id="chatStatus">
-                            <span id="statusText">Ready to chat</span>
-                        </div>
-                        <div class="chat-input-group">
-                            <input type="text" id="chatInput" placeholder="Ask a question about your documents..." class="chat-input" onkeypress="handleChatKeypress(event)">
-                            <button class="btn btn-primary" onclick="sendMessage()" id="sendBtn">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- History Tab -->
-            <section id="history" class="tab-content">
-                <div class="tab-header">
-                    <h2><i class="fas fa-history"></i> Chat History</h2>
-                    <p>Review your previous conversations</p>
-                </div>
-
-                <div class="history-container">
-                    <div id="historyList" class="history-list">
-                        <p class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            No chat history yet
-                        </p>
-                    </div>
-                    <button class="btn btn-danger" onclick="clearHistory()" id="clearHistoryBtn" style="display: none;">
-                        <i class="fas fa-trash"></i> Clear History
+                <div class="topbar-actions">
+                    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">
+                        <i data-lucide="moon"></i>
+                    </button>
+                    <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings">
+                        <i data-lucide="settings"></i>
                     </button>
                 </div>
-            </section>
-        </main>
+            </header>
+
+            <main class="workspace">
+                <section id="sourcesPanel" class="panel active">
+                    <div class="panel-header">
+                        <h3>Sources <span id="sourcesCount">0</span></h3>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary" type="button" onclick="openUploadModal()">
+                                <i data-lucide="plus"></i>
+                                Add
+                            </button>
+                            <button class="btn" type="button" onclick="listDocuments()">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-body" id="sourcesList">
+                        <div class="empty-state">
+                            <i data-lucide="inbox"></i>
+                            <h4>Your notebook is empty</h4>
+                            <p>Add documents or web sources to start learning.</p>
+                            <div class="panel-actions" style="justify-content:center;">
+                                <button class="btn btn-primary" type="button" onclick="openUploadModal()">Add source</button>
+                                <button class="btn btn-secondary" type="button" onclick="listDocuments()">Refresh</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="chatPanel" class="panel">
+                    <div class="panel-header">
+                        <h3>Chat</h3>
+                        <div class="panel-actions">
+                            <div class="custom-dropdown" id="composerToneDropdown">
+                                <button class="cd-trigger" type="button" aria-haspopup="listbox">
+                                    <span class="cd-label">Default</span>
+                                    <i data-lucide="chevron-down"></i>
+                                </button>
+                                <div class="cd-menu" role="listbox">
+                                    {% for tone in tones %}
+                                    <div class="cd-item" data-value="{{ tone }}">{{ tone|capitalize }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="custom-dropdown" id="composerLevelDropdown">
+                                <button class="cd-trigger" type="button" aria-haspopup="listbox">
+                                    <span class="cd-label">Beginner</span>
+                                    <i data-lucide="chevron-down"></i>
+                                </button>
+                                <div class="cd-menu" role="listbox">
+                                    {% for level in levels %}
+                                    <div class="cd-item" data-value="{{ level }}">{{ level|capitalize }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="chatMessages" class="panel-body chat-body">
+                        <div class="chat-empty">
+                            <i data-lucide="bot"></i>
+                            <h4>Welcome to your notebook</h4>
+                            <p>Add sources, then ask the AI to start learning.</p>
+                        </div>
+                    </div>
+
+                    <div class="composer floating-composer">
+                        <textarea id="chatInput" placeholder="Ask anything about your sources... (Shift+Enter for newline)" onkeypress="handleChatKeypress(event)"></textarea>
+                        <div class="composer-actions">
+                            <div class="left-actions">
+                                <button class="icon-btn" id="attachSourceBtn" type="button" title="Attach sources">
+                                    <i data-lucide="paperclip"></i>
+                                </button>
+                                <button class="icon-btn" id="suggestBtn" type="button" title="Suggested prompts">
+                                    <i data-lucide="zap"></i>
+                                </button>
+                            </div>
+                            <div class="right-actions">
+                                <button class="btn btn-secondary" id="stopBtn" type="button" onclick="stopGeneration()" style="display:none;">Stop</button>
+                                <button class="btn btn-primary" id="sendBtn" type="button" onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="studioPanel" class="panel">
+                    <div class="panel-header">
+                        <h3>Studio</h3>
+                        <div class="panel-actions">
+                            <button class="btn" type="button" onclick="openStudioCreate()">Create</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-body" id="studioList">
+                        <div class="empty-state">
+                            <i data-lucide="flask-conical"></i>
+                            <h4>Study artifacts</h4>
+                            <p>Generate summaries, flashcards, quizzes, and more from your sources.</p>
+                            <div class="studio-grid">
+                                <div class="studio-card">Study Guide</div>
+                                <div class="studio-card">Flashcards</div>
+                                <div class="studio-card">Quiz</div>
+                                <div class="studio-card">Mind Map</div>
+                                <div class="studio-card">Report</div>
+                                <div class="studio-card">Notes</div>
+                            </div>
+                            <button class="btn btn-primary" type="button" onclick="openStudioCreate()">Create</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 
-    <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <div id="uploadModal" class="modal" aria-hidden="true">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h4>Add Sources</h4>
+                <button class="icon-btn" type="button" onclick="closeUploadModal()"><i data-lucide="x"></i></button>
+            </div>
+            <p class="muted">Upload PDF, TXT, CSV, JSON, or paste a wiki URL.</p>
+            <div id="uploadDropArea" class="upload-drop">
+                <input type="file" id="fileInput" multiple accept=".pdf,.txt,.csv,.json" hidden>
+                <div class="upload-cta">
+                    <i data-lucide="upload-cloud"></i>
+                    <span>Drop files or click to browse</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" type="button" onclick="closeUploadModal()">Cancel</button>
+                <button class="btn btn-primary" type="button" onclick="startUpload()">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="previewModal" class="modal" aria-hidden="true">
+        <div class="modal-panel large">
+            <div class="modal-header">
+                <strong id="previewTitle">Preview</strong>
+                <button class="icon-btn" type="button" onclick="closePreview()"><i data-lucide="x"></i></button>
+            </div>
+            <div id="previewContent" class="preview-content"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
