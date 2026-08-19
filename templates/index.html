@@ -52,6 +52,11 @@
                 </div>
             </nav>
 
+            <div class="sidebar-status">
+                <span class="status-dot"></span>
+                <span id="statusText">Ready to learn</span>
+            </div>
+
             <div class="sidebar-footer">
                 <button class="ghost-btn" type="button" onclick="resetSession()" title="New session">
                     <i data-lucide="refresh-cw"></i>
@@ -87,7 +92,7 @@
             </header>
 
             <main class="workspace">
-                <section id="sourcesPanel" class="panel active">
+                <section id="sourcesPanel" class="panel">
                     <div class="panel-header">
                         <h3>Sources <span id="sourcesCount">0</span></h3>
                         <div class="panel-actions">
@@ -96,6 +101,17 @@
                                 Add
                             </button>
                             <button class="btn" type="button" onclick="listDocuments()">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="source-toolbar">
+                        <div class="source-search-wrap">
+                            <i data-lucide="search"></i>
+                            <input id="sourceSearchInput" type="text" placeholder="Find a source..." aria-label="Search sources">
+                        </div>
+                        <div class="selection-badge">
+                            <span id="selectedCount">0</span>
+                            selected
                         </div>
                     </div>
 
@@ -112,7 +128,7 @@
                     </div>
                 </section>
 
-                <section id="chatPanel" class="panel">
+                <section id="chatPanel" class="panel active">
                     <div class="panel-header">
                         <h3>Chat</h3>
                         <div class="panel-actions">
@@ -214,9 +230,52 @@
                     <span>Drop files or click to browse</span>
                 </div>
             </div>
+            <div id="selectedFilesList" class="selected-files-list"></div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" type="button" onclick="closeUploadModal()">Cancel</button>
                 <button class="btn btn-primary" type="button" onclick="startUpload()">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal" aria-hidden="true">
+        <div class="modal-panel settings-panel">
+            <div class="modal-header">
+                <h4>Notebook settings</h4>
+                <button class="icon-btn" type="button" data-close-modal="settingsModal"><i data-lucide="x"></i></button>
+            </div>
+
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label>Response tone</label>
+                    <select id="settingsToneSelect" aria-label="Select response tone">
+                        {% for tone in tones %}
+                        <option value="{{ tone }}">{{ tone|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label>Learning level</label>
+                    <select id="settingsLevelSelect" aria-label="Select learning level">
+                        {% for level in levels %}
+                        <option value="{{ level }}">{{ level|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>Theme</label>
+                <div class="segmented" id="themeOptions">
+                    <button class="seg-btn active" type="button" data-theme="dark">Dark</button>
+                    <button class="seg-btn" type="button" data-theme="light">Light</button>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" type="button" data-close-modal="settingsModal">Close</button>
+                <button class="btn btn-primary" type="button" onclick="resetSession()">Reset session</button>
             </div>
         </div>
     </div>
