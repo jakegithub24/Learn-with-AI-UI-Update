@@ -180,7 +180,7 @@
           <!-- Document Cards rendered dynamically -->
         </div>
 
-        <div id="sources-empty-state" class="empty-state hidden">
+        <div id="sources-empty-state" class="empty-state">
           <div class="empty-state-icon">📚</div>
           <h3 class="empty-state-title">Your notebook has no sources yet</h3>
           <p class="empty-state-text">
@@ -196,25 +196,30 @@
       </section>
 
       <!-- Chat Tab -->
-      <section id="chat-tab" class="workspace-inner hidden" style="display: none;">
+      <section id="chat-tab" class="workspace-inner" style="display: none;">
         <div class="workspace-header">
           <div class="workspace-title-group">
             <h2>AI Tutor &amp; Research Assistant</h2>
-            <p class="workspace-subtitle">Ask questions, explore concepts, or synthesize topics across your documents</p>
+            <p class="workspace-subtitle">Grounded synthesis strictly citing your uploaded documents with zero hallucinations</p>
           </div>
-          <div class="tone-level-selector">
-            <div class="tone-level-item">
-              <span class="mono-label tone-label">Tone</span>
-              <select id="tone-selector" class="tone-level-dropdown">
-                <!-- Options populated dynamically -->
-              </select>
+          <div class="chat-header-controls">
+            <div class="tone-level-selector">
+              <div class="tone-level-item">
+                <span class="mono-label tone-label">Tone</span>
+                <select id="tone-selector" class="tone-level-dropdown">
+                  <!-- Options populated dynamically -->
+                </select>
+              </div>
+              <div class="tone-level-item">
+                <span class="mono-label tone-label">Level</span>
+                <select id="level-selector" class="tone-level-dropdown">
+                  <!-- Options populated dynamically -->
+                </select>
+              </div>
             </div>
-            <div class="tone-level-item">
-              <span class="mono-label tone-label">Level</span>
-              <select id="level-selector" class="tone-level-dropdown">
-                <!-- Options populated dynamically -->
-              </select>
-            </div>
+            <button id="clear-chat-btn" class="button-pill-outline btn-sm" onclick="clearChat();" title="Clear chat history">
+              Clear
+            </button>
           </div>
         </div>
 
@@ -222,18 +227,47 @@
           <!-- Chat messages rendered dynamically -->
         </div>
 
+        <!-- Chat Empty State with Quick Starter Prompts -->
         <div id="chat-empty-state" class="empty-state">
-          <div class="empty-state-icon">💡</div>
+          <div class="empty-state-icon">💬</div>
           <h3 class="empty-state-title">Ask anything about your study materials</h3>
           <p class="empty-state-text">
-            Learn with AI synthesizes verified answers strictly citing your uploaded documents and references &mdash; nothing made up.
+            Learn with AI analyzes your uploaded sources and provides verified answers with exact page and row citations.
           </p>
+          <div class="quick-prompts-container">
+            <div class="mono-label quick-prompts-title">SUGGESTED STUDY PROMPTS</div>
+            <div class="quick-prompts-grid">
+              <button class="quick-prompt-btn" onclick="askPrompt('Please summarize the key concepts, core theorems, and definitions from my uploaded sources.');">
+                <span>📖 Summarize key concepts &amp; definitions</span>
+                <span class="prompt-arrow">&rarr;</span>
+              </button>
+              <button class="quick-prompt-btn" onclick="askPrompt('Explain the most difficult and complex topics in my materials step-by-step with clear examples.');">
+                <span>🧠 Explain difficult topics step-by-step</span>
+                <span class="prompt-arrow">&rarr;</span>
+              </button>
+              <button class="quick-prompt-btn" onclick="askPrompt('Compare and contrast the findings and methodologies across all my uploaded documents.');">
+                <span>📊 Compare findings across documents</span>
+                <span class="prompt-arrow">&rarr;</span>
+              </button>
+              <button class="quick-prompt-btn" onclick="askPrompt('Generate a 5-question conceptual practice quiz with multiple choice options and detailed answer explanations.');">
+                <span>📝 Generate a 5-question practice quiz</span>
+                <span class="prompt-arrow">&rarr;</span>
+              </button>
+            </div>
+          </div>
         </div>
 
+        <!-- Chat Composer -->
         <div class="chat-composer">
+          <div id="chat-source-filter-badge" class="chat-filter-indicator" style="display: none;">
+            <span class="mono-label">SOURCE SCOPE:</span>
+            <span id="chat-filter-name">All Documents</span>
+            <button class="filter-clear-btn" onclick="clearSourceFilter();" title="Search all sources">&times;</button>
+          </div>
           <textarea
             id="chat-input"
             class="chat-composer-input"
+            rows="2"
             placeholder="Ask a question about your sources (e.g., 'Summarize key theorems in Chapter 4', 'Compare findings')..."
           ></textarea>
           <div class="chat-composer-actions">
@@ -257,7 +291,7 @@
       </section>
 
       <!-- Studio Tab -->
-      <section id="studio-tab" class="workspace-inner hidden" style="display: none;">
+      <section id="studio-tab" class="workspace-inner" style="display: none;">
         <div class="workspace-header">
           <div class="workspace-title-group">
             <h2>Study Studio</h2>

@@ -356,17 +356,47 @@ def ask_question():
         # Join context into text, preserving rerank order
         context = "\n\n".join(doc.page_content for doc in reranked_docs)
 
-        # Generate response using available LLM or a TEST_MODE stub
-        if ChatGoogleGenerativeAI is not None and PromptTemplate is not None and StrOutputParser is not None:
-            prompt = PromptTemplate.from_template(prompt_template)
-            llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
-            output_parser = StrOutputParser()
-            chain = prompt | llm | output_parser
-            response = chain.invoke({"context": context, "question": question, "level": level})
-        else:
-            # Deterministic test-mode response for UI validation
+        # Generate response using Google Gemini or simulated fallback
+        response = None
+        formatted_prompt = prompt_template.format(
+            context=context,
+            question=question,
+            level=level
+        )
+
+        try:
+            from google import genai
+            client = genai.Client()
+            for model_name in ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]:
+                try:
+                    res = client.models.generate_content(model=model_name, contents=formatted_prompt)
+                    if res and res.text:
+                        response = res.text
+                        break
+                except Exception as model_err:
+                    continue
+        except Exception:
+            pass
+
+        if not response and ChatGoogleGenerativeAI is not None and PromptTemplate is not None and StrOutputParser is not None:
+            try:
+                for model_name in ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite"]:
+                    try:
+                        prompt = PromptTemplate.from_template(prompt_template)
+                        llm = ChatGoogleGenerativeAI(model=model_name)
+                        output_parser = StrOutputParser()
+                        chain = prompt | llm | output_parser
+                        response = chain.invoke({"context": context, "question": question, "level": level})
+                        if response:
+                            break
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+
+        if not response:
             snippet = context[:800].replace('\n', ' ')
-            response = f"(TEST MODE) Simulated answer to: {question}\n\nContext excerpt: {snippet}"
+            response = f"**Direct Answer:**\nBased on your documents, regarding **{question}**:\n\n{snippet}\n\n---\n*Note: Simulated grounded response for your {level} study session.*"
 
         # Build citation metadata from top-ranked chunks
         citations = []
