@@ -105,8 +105,15 @@ def cleanup_old_sessions():
 
 @app.route('/')
 def index():
-    """Main page"""
+    """SaaS Landing Page for app.learnwithai.ai"""
     return render_template('index.html', tones=list(PROMPT_MAP.keys()), levels=LEVELS)
+
+
+@app.route('/app')
+@app.route('/workspace')
+def app_workspace():
+    """SaaS Application Workspace"""
+    return render_template('app.html', tones=list(PROMPT_MAP.keys()), levels=LEVELS)
 
 
 @app.route('/api/session/create', methods=['POST'])
@@ -180,14 +187,17 @@ def upload_documents():
 
     # Handle wiki links
     wiki_links = request.form.getlist('wiki_links')
+    existing_wiki = {d['path'] for d in session_data[session_id]['documents'] if d.get('type') == 'wiki'}
     for link in wiki_links:
-        if link.strip():
+        link_str = link.strip()
+        if link_str and link_str not in existing_wiki:
             session_data[session_id]['documents'].append({
-                'name': link,
-                'path': link,
+                'name': link_str,
+                'path': link_str,
                 'type': 'wiki',
                 'uploaded_at': datetime.now().isoformat()
             })
+            existing_wiki.add(link_str)
 
     if not uploaded_files and not wiki_links:
         return jsonify({
