@@ -120,7 +120,7 @@
         <div class="sidebar-section">
           <div class="sidebar-section-title">Library</div>
           <nav>
-            <div class="sidebar-nav-item">
+            <div class="sidebar-nav-item" data-tab="recent">
               <div class="sidebar-nav-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -129,7 +129,7 @@
               </div>
               <span>Recent Topics</span>
             </div>
-            <div class="sidebar-nav-item">
+            <div class="sidebar-nav-item" data-tab="summaries">
               <div class="sidebar-nav-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
@@ -154,213 +154,11 @@
 
     <!-- Main Content Workspace -->
     <main class="app-workspace">
-      <!-- Sources Tab -->
-      <section id="sources-tab" class="workspace-inner">
-        <div class="workspace-header">
-          <div class="workspace-title-group">
-            <h2>Study Sources</h2>
-            <p id="sources-header-info" class="workspace-subtitle">0 indexed documents</p>
-          </div>
-          <button id="add-source-btn" class="button-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Add Source
-          </button>
-        </div>
-
-        <div class="sources-filter-bar">
-          <input
-            type="text"
-            id="sources-search-input"
-            class="search-input"
-            placeholder="Filter loaded sources by name or format..."
-          />
-        </div>
-
-        <div id="sources-list" class="sources-list-container">
-          <!-- Document Cards rendered dynamically -->
-        </div>
-
-        <div id="sources-empty-state" class="empty-state">
-          <div class="empty-state-icon">📚</div>
-          <h3 class="empty-state-title">Your notebook has no sources yet</h3>
-          <p class="empty-state-text">
-            Upload PDF textbooks, lecture notes, CSV data, or add Wikipedia links to build your personal grounded knowledge base.
-          </p>
-          <div class="empty-state-action">
-            <button class="button-primary" onclick="openAddSourceModal();">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              Upload your first source
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Chat Tab -->
-      <section id="chat-tab" class="workspace-inner" style="display: none;">
-        <div class="workspace-header">
-          <div class="workspace-title-group">
-            <h2>AI Tutor &amp; Research Assistant</h2>
-            <p class="workspace-subtitle">Grounded synthesis strictly citing your uploaded documents with zero hallucinations</p>
-          </div>
-          <div class="chat-header-controls">
-            <div class="tone-level-selector">
-              <div class="tone-level-item">
-                <span class="mono-label tone-label">Tone</span>
-                <select id="tone-selector" class="tone-level-dropdown">
-                  <!-- Options populated dynamically -->
-                </select>
-              </div>
-              <div class="tone-level-item">
-                <span class="mono-label tone-label">Level</span>
-                <select id="level-selector" class="tone-level-dropdown">
-                  <!-- Options populated dynamically -->
-                </select>
-              </div>
-            </div>
-            <button id="clear-chat-btn" class="button-pill-outline btn-sm" onclick="clearChat();" title="Clear chat history">
-              Clear
-            </button>
-          </div>
-        </div>
-
-        <div id="chat-messages" class="chat-messages-container">
-          <!-- Chat messages rendered dynamically -->
-        </div>
-
-        <!-- Chat Empty State with Quick Starter Prompts -->
-        <div id="chat-empty-state" class="empty-state">
-          <div class="empty-state-icon">💬</div>
-          <h3 class="empty-state-title">Ask anything about your study materials</h3>
-          <p class="empty-state-text">
-            Learn with AI analyzes your uploaded sources and provides verified answers with exact page and row citations.
-          </p>
-          <div class="quick-prompts-container">
-            <div class="mono-label quick-prompts-title">SUGGESTED STUDY PROMPTS</div>
-            <div class="quick-prompts-grid">
-              <button class="quick-prompt-btn" onclick="askPrompt('Please summarize the key concepts, core theorems, and definitions from my uploaded sources.');">
-                <span>📖 Summarize key concepts &amp; definitions</span>
-                <span class="prompt-arrow">&rarr;</span>
-              </button>
-              <button class="quick-prompt-btn" onclick="askPrompt('Explain the most difficult and complex topics in my materials step-by-step with clear examples.');">
-                <span>🧠 Explain difficult topics step-by-step</span>
-                <span class="prompt-arrow">&rarr;</span>
-              </button>
-              <button class="quick-prompt-btn" onclick="askPrompt('Compare and contrast the findings and methodologies across all my uploaded documents.');">
-                <span>📊 Compare findings across documents</span>
-                <span class="prompt-arrow">&rarr;</span>
-              </button>
-              <button class="quick-prompt-btn" onclick="askPrompt('Generate a 5-question conceptual practice quiz with multiple choice options and detailed answer explanations.');">
-                <span>📝 Generate a 5-question practice quiz</span>
-                <span class="prompt-arrow">&rarr;</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Chat Composer -->
-        <div class="chat-composer">
-          <div id="chat-source-filter-badge" class="chat-filter-indicator" style="display: none;">
-            <span class="mono-label">SOURCE SCOPE:</span>
-            <span id="chat-filter-name">All Documents</span>
-            <button class="filter-clear-btn" onclick="clearSourceFilter();" title="Search all sources">&times;</button>
-          </div>
-          <textarea
-            id="chat-input"
-            class="chat-composer-input"
-            rows="2"
-            placeholder="Ask a question about your sources (e.g., 'Summarize key theorems in Chapter 4', 'Compare findings')..."
-          ></textarea>
-          <div class="chat-composer-actions">
-            <div class="chat-composer-left">
-              <button id="attach-source-btn" class="button-pill-outline btn-sm" title="Add / Attach sources">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                Attach Source
-              </button>
-              <span class="chat-composer-hint">
-                Press <strong>Enter</strong> to send &bull; <strong>Shift + Enter</strong> for new line
-              </span>
-            </div>
-            <div class="chat-composer-right">
-              <button id="send-btn" class="button-primary btn-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Studio Tab -->
-      <section id="studio-tab" class="workspace-inner" style="display: none;">
-        <div class="workspace-header">
-          <div class="workspace-title-group">
-            <h2>Study Studio</h2>
-            <p class="workspace-subtitle">Generate high-yield academic artifacts and revision tools from your documents</p>
-          </div>
-        </div>
-
-        <div class="studio-grid" id="studio-grid">
-          <div class="studio-card" onclick="handleStudioClick('Study Guide');">
-            <div class="studio-icon-wrap">📖</div>
-            <div class="studio-card-title">Study Guide</div>
-            <div class="studio-card-desc">Comprehensive structured overview covering core topics, formulas, key principles, and chapter summaries.</div>
-            <div class="studio-card-footer">
-              <span class="studio-tag">Synthesis</span>
-              <span class="studio-action-link">Generate in Chat &rarr;</span>
-            </div>
-          </div>
-
-          <div class="studio-card" onclick="handleStudioClick('Flashcards');">
-            <div class="studio-icon-wrap">🃏</div>
-            <div class="studio-card-title">Flashcards</div>
-            <div class="studio-card-desc">Active recall question &amp; answer deck designed for spaced repetition and memory retention.</div>
-            <div class="studio-card-footer">
-              <span class="studio-tag">Active Recall</span>
-              <span class="studio-action-link">Generate in Chat &rarr;</span>
-            </div>
-          </div>
-
-          <div class="studio-card" onclick="handleStudioClick('Quiz');">
-            <div class="studio-icon-wrap">📝</div>
-            <div class="studio-card-title">Practice Quiz</div>
-            <div class="studio-card-desc">Interactive 5-question multiple choice &amp; conceptual assessment with comprehensive answer rationales.</div>
-            <div class="studio-card-footer">
-              <span class="studio-tag">Assessment</span>
-              <span class="studio-action-link">Generate in Chat &rarr;</span>
-            </div>
-          </div>
-
-          <div class="studio-card" onclick="handleStudioClick('Mind Map');">
-            <div class="studio-icon-wrap">🧠</div>
-            <div class="studio-card-title">Concept Mind Map</div>
-            <div class="studio-card-desc">Hierarchical text outline and relationship graph connecting primary topics and sub-disciplines.</div>
-            <div class="studio-card-footer">
-              <span class="studio-tag">Structure</span>
-              <span class="studio-action-link">Generate in Chat &rarr;</span>
-            </div>
-          </div>
-
-          <div class="studio-card" onclick="handleStudioClick('Notes');">
-            <div class="studio-icon-wrap">📌</div>
-            <div class="studio-card-title">Executive Notes</div>
-            <div class="studio-card-desc">Concise, bulleted key takeaways and formulas formatted for high-efficiency pre-exam review.</div>
-            <div class="studio-card-footer">
-              <span class="studio-tag">Revision</span>
-              <span class="studio-action-link">Generate in Chat &rarr;</span>
-            </div>
-          </div>
-
-          <div class="studio-card" onclick="handleStudioClick('Report');">
-            <div class="studio-icon-wrap">📊</div>
-            <div class="studio-card-title">Academic Briefing</div>
-            <div class="studio-card-desc">In-depth structured analysis and comparative briefing synthesizing all ingested sources.</div>
-            <div class="studio-card-footer">
-              <span class="studio-tag">Deep Dive</span>
-              <span class="studio-action-link">Generate in Chat &rarr;</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      {% include "sources.html" %}
+      {% include "ai_tutor_and_chat.html" %}
+      {% include "study_studio.html" %}
+      {% include "rencent_topics.html" %}
+      {% include "saved_summaries.html" %}
     </main>
   </div>
 </div>
@@ -428,40 +226,37 @@
 
 <!-- Settings Modal -->
 <div id="settings-modal-backdrop" class="modal-backdrop">
-  <div class="modal contact-form-card" style="max-width: 500px;">
+  <div class="modal" style="max-width: 500px;">
     <div class="modal-header">
       <h3 class="modal-header-title">Workspace Settings</h3>
-      <button class="modal-close-btn" onclick="closeSettingsModal();">&times;</button>
+      <button class="modal-close-btn" onclick="closeSettingsModal();" aria-label="Close settings">&times;</button>
     </div>
     <div class="modal-body">
-      <!-- Theme Selection -->
-      <div style="margin-bottom: 24px;">
-        <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">Appearance &amp; Theme</div>
-        <div style="display: flex; gap: 12px;">
-          <button id="theme-dark-btn" class="button-pill-outline" style="flex: 1;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            Dark Mode
-          </button>
-          <button id="theme-light-btn" class="button-pill-outline" style="flex: 1;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            Light Canvas
-          </button>
+      <!-- Theme Selection Toggle -->
+      <div class="settings-theme-row">
+        <div class="settings-theme-info">
+          <div class="settings-section-title" style="margin-bottom: 2px;">Dark Mode</div>
+          <div class="text-muted" style="font-size: 12px;" id="settings-theme-status-text">Switch between light canvas and dark theme</div>
         </div>
+        <label class="switch-toggle" for="settings-theme-toggle" title="Toggle dark/light theme">
+          <input type="checkbox" id="settings-theme-toggle" />
+          <span class="switch-slider"></span>
+        </label>
       </div>
 
       <!-- AI Tutor Persona -->
       <div style="margin-bottom: 24px;">
-        <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">AI Tutor Persona</div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="settings-section-title">AI Tutor Persona</div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
           <div>
-            <label class="mono-label" style="display: block; margin-bottom: 6px;">Explanatory Tone</label>
-            <select id="settings-tone" class="search-input" style="width: 100%;">
+            <label for="settings-tone" class="settings-field-label">Explanatory Tone</label>
+            <select id="settings-tone" class="settings-select">
               <!-- Options populated dynamically -->
             </select>
           </div>
           <div>
-            <label class="mono-label" style="display: block; margin-bottom: 6px;">Depth &amp; Difficulty Level</label>
-            <select id="settings-level" class="search-input" style="width: 100%;">
+            <label for="settings-level" class="settings-field-label">Depth &amp; Difficulty Level</label>
+            <select id="settings-level" class="settings-select">
               <!-- Options populated dynamically -->
             </select>
           </div>
@@ -470,8 +265,8 @@
 
       <!-- Session Management -->
       <div>
-        <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">Session Management</div>
-        <button id="settings-reset-btn" class="button-pill-outline" style="width: 100%; color: var(--error);">
+        <div class="settings-section-title">Session Management</div>
+        <button id="settings-reset-btn" class="btn-danger-outline" type="button">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2-8.83"></path></svg>
           Reset Notebook (Clear Ingested Documents)
         </button>

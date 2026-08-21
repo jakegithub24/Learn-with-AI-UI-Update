@@ -9,6 +9,7 @@ import os
 import secrets
 import tempfile
 import shutil
+import uuid
 from datetime import datetime, timedelta
 
 # Load environment variables
@@ -214,6 +215,57 @@ def upload_documents():
         "wiki_links": len(wiki_links),
         "total_documents": len(session_data[session_id]['documents']),
         "errors": errors
+    })
+
+
+@app.route('/api/documents/sample', methods=['POST'])
+def load_sample_document():
+    """Load a sample quantum computing document for instant demonstration"""
+    session_id = session.get('session_id')
+    if not session_id or session_id not in session_data:
+        session_id = str(uuid.uuid4())
+        session['session_id'] = session_id
+        session_data[session_id] = {
+            'documents': [],
+            'vectorstore': None,
+            'chat_history': [],
+            'settings': {'tone': 'default', 'level': 'beginner'},
+            'last_activity': datetime.now()
+        }
+
+    sample_filename = "quantum_computing_primer.txt"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}_{sample_filename}")
+    sample_content = (
+        "Quantum Computing and Quantum Mechanics Primer\n\n"
+        "1. Qubits and Superposition:\n"
+        "Unlike classical bits which exist strictly as 0 or 1, quantum bits (qubits) exist in a superposition "
+        "state represented mathematically as |psi> = alpha|0> + beta|1>, where |alpha|^2 + |beta|^2 = 1.\n\n"
+        "2. Coherence and Decoherence Times:\n"
+        "Superconducting transmon qubits operate in cryogenic dilution refrigerators at temperatures below 15 millikelvin. "
+        "Energy relaxation time (T1) is approximately 90 microseconds, while dephasing decoherence time (T2) is approximately 120 microseconds.\n\n"
+        "3. Quantum Algorithms:\n"
+        "Shor's algorithm achieves polynomial time prime factorization O((log N)^3) compared to exponential classical algorithms. "
+        "Grover's search algorithm achieves quadratic speedup O(sqrt(N)) for unstructured database queries.\n\n"
+        "4. Quantum Error Correction:\n"
+        "Surface codes protect quantum information across a two-dimensional grid of physical data and syndrome qubits "
+        "with an error threshold of approximately 1%."
+    )
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(sample_content)
+
+    doc_entry = {
+        'name': sample_filename,
+        'path': filepath,
+        'type': 'file',
+        'uploaded_at': datetime.now().isoformat()
+    }
+    session_data[session_id]['documents'].append(doc_entry)
+    session_data[session_id]['last_activity'] = datetime.now()
+
+    return jsonify({
+        "success": True,
+        "document": doc_entry,
+        "total_documents": len(session_data[session_id]['documents'])
     })
 
 

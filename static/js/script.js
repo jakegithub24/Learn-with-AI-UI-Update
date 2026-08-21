@@ -173,12 +173,34 @@ function bindEventListeners() {
   const uploadBtn = document.getElementById('upload-btn');
   if (uploadBtn) uploadBtn.addEventListener('click', uploadSources);
 
-  // Theme modal buttons
-  const themeDarkBtn = document.getElementById('theme-dark-btn');
-  if (themeDarkBtn) themeDarkBtn.addEventListener('click', () => setTheme('dark'));
+  // Empty state launchpad drag & drop bindings
+  const emptyStateLaunchpad = document.getElementById('sources-empty-state');
+  if (emptyStateLaunchpad) {
+    emptyStateLaunchpad.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      emptyStateLaunchpad.style.borderColor = 'var(--action-blue)';
+    });
+    emptyStateLaunchpad.addEventListener('dragleave', () => {
+      emptyStateLaunchpad.style.borderColor = '';
+    });
+    emptyStateLaunchpad.addEventListener('drop', (e) => {
+      e.preventDefault();
+      emptyStateLaunchpad.style.borderColor = '';
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        openAddSourceModal();
+        handleFileSelection(e.dataTransfer.files);
+      }
+    });
+  }
 
-  const themeLightBtn = document.getElementById('theme-light-btn');
-  if (themeLightBtn) themeLightBtn.addEventListener('click', () => setTheme('light'));
+  // Settings modal theme switch toggle
+  const settingsThemeToggle = document.getElementById('settings-theme-toggle');
+  if (settingsThemeToggle) {
+    settingsThemeToggle.addEventListener('change', (e) => {
+      const newTheme = e.target.checked ? 'dark' : 'light';
+      setTheme(newTheme);
+    });
+  }
 
   const settingsTone = document.getElementById('settings-tone');
   if (settingsTone) {
@@ -194,9 +216,13 @@ function bindEventListeners() {
     });
   }
 
-  // Chat input
+  // Chat input with auto-resize and Enter key listener
   const chatInput = document.getElementById('chat-input');
   if (chatInput) {
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+    });
     chatInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -268,9 +294,16 @@ function bindEventListeners() {
 function switchTab(tab) {
   appState.currentTab = tab;
 
-  const tabs = ['sources', 'chat', 'studio'];
-  tabs.forEach((t) => {
-    const tabEl = document.getElementById(`${t}-tab`);
+  const tabMap = {
+    sources: 'sources-tab',
+    chat: 'chat-tab',
+    studio: 'studio-tab',
+    recent: 'recent-topics-tab',
+    summaries: 'saved-summaries-tab',
+  };
+
+  Object.entries(tabMap).forEach(([t, elId]) => {
+    const tabEl = document.getElementById(elId);
     if (tabEl) {
       if (t === tab) {
         tabEl.style.display = 'flex';
@@ -283,10 +316,10 @@ function switchTab(tab) {
   });
 
   // Update active sidebar nav item
-  document.querySelectorAll('#main-nav .sidebar-nav-item').forEach((btn) => {
+  document.querySelectorAll('.sidebar-nav-item').forEach((btn) => {
     btn.classList.remove('active');
   });
-  const activeNav = document.querySelector(`#main-nav [data-tab="${tab}"]`);
+  const activeNav = document.querySelector(`.sidebar-nav-item[data-tab="${tab}"]`);
   if (activeNav) activeNav.classList.add('active');
 
   // Re-render icons
@@ -299,6 +332,21 @@ function switchTab(tab) {
     if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
     const chatInput = document.getElementById('chat-input');
     if (chatInput) setTimeout(() => chatInput.focus(), 80);
+  }
+}
+
+function copySummaryText(btn) {
+  const card = btn.closest('.summary-card');
+  if (!card) return;
+  const title = card.querySelector('.summary-title')?.textContent || '';
+  const body = card.querySelector('.summary-snippet')?.textContent || '';
+  const textToCopy = `${title}\n\n${body}`.trim();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      showToast('✓ Summary copied to clipboard', 'info');
+    });
+  } else {
+    showToast('✓ Summary selected', 'info');
   }
 }
 
@@ -327,44 +375,110 @@ async function loadDocuments() {
 function renderDocuments() {
   const container = document.getElementById('sources-list');
   const emptyState = document.getElementById('sources-empty-state');
+  const toolbar = document.getElementById('sources-toolbar');
+  const headerInfo = document.getElementById('sources-header-info');
+  const chatActiveCount = document.getElementById('chat-active-sources-count');
+  const groundingChips = document.getElementById('chat-grounding-chips');
+
+  const docs = appState.documents || [];
+  const totalCount = docs.length;
+
+  if (headerInfo) {
+    headerInfo.textContent = `${totalCount} source${totalCount === 1 ? '' : 's'} loaded`;
+  }
+
+  if (chatActiveCount) {
+    if (appState.selectedSources.length === 0) {
+      chatActiveCount.textContent = `${totalCount} source${totalCount === 1 ? '' : 's'} active`;
+    } else {
+      chatActiveCount.textContent = `${appState.selectedSources.length} of ${totalCount} active`;
+    }
+  }
+
+  // Render grounding bar chips in Chat tab
+  if (groundingChips) {
+    if (totalCount === 0) {
+      groundingChips.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">No sources added yet</span>`;
+    } else {
+      const isAllActive = appState.selectedSources.length === 0;
+      let chipsHTML = `
+        <div class="grounding-chip ${isAllActive ? 'active' : ''}" onclick="selectAllSources();" title="Search across all sources">
+          ✓ All (${totalCount})
+        </div>
+      `;
+
+      docs.forEach((doc, idx) => {
+        const docId = doc.path || doc.name;
+        const isSelected = appState.selectedSources.includes(docId);
+        const icon = getDocumentIcon(doc);
+        chipsHTML += `
+          <div class="grounding-chip ${isSelected ? 'active' : ''}" onclick="toggleSourceSelection(${idx});" title="Toggle ${escapeHtml(doc.name)}">
+            <span>${icon}</span>
+            <span>${escapeHtml(doc.name)}</span>
+          </div>
+        `;
+      });
+      groundingChips.innerHTML = chipsHTML;
+    }
+  }
+
   if (!container || !emptyState) return;
 
-  if (!appState.documents || appState.documents.length === 0) {
+  if (totalCount === 0) {
     container.style.display = 'none';
     emptyState.style.display = 'flex';
+    emptyState.style.flexDirection = 'column';
+    if (toolbar) toolbar.style.display = 'none';
     return;
   }
 
-  container.style.display = 'flex';
+  container.style.display = 'grid';
   emptyState.style.display = 'none';
+  if (toolbar) toolbar.style.display = 'flex';
 
-  container.innerHTML = appState.documents
-    .map((doc, index) => createDocumentItem(doc, index))
+  const selectionStatus = document.getElementById('sources-selection-status');
+  if (selectionStatus) {
+    selectionStatus.textContent = appState.selectedSources.length === 0
+      ? `Scope: All (${totalCount})`
+      : `Scope: ${appState.selectedSources.length} Focused`;
+  }
+
+  container.innerHTML = docs
+    .map((doc, index) => createSourceCard(doc, index))
     .join('');
 
   // Click card to toggle specific search scoping
-  document.querySelectorAll('.document-item').forEach((item) => {
-    item.addEventListener('click', (e) => {
-      if (!e.target.closest('.document-action-btn')) {
-        toggleSourceSelection(parseInt(item.dataset.docIndex, 10));
+  document.querySelectorAll('.source-card').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.source-action-btn')) {
+        toggleSourceSelection(parseInt(card.dataset.docIndex, 10));
       }
     });
   });
 
-  // Preview button
-  document.querySelectorAll('.document-preview-btn').forEach((btn) => {
+  // Chat with Source button
+  document.querySelectorAll('.source-chat-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const docIndex = btn.closest('.document-item').dataset.docIndex;
+      const docIndex = parseInt(btn.dataset.docIndex, 10);
+      chatWithSource(docIndex);
+    });
+  });
+
+  // Preview button
+  document.querySelectorAll('.source-preview-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const docIndex = parseInt(btn.dataset.docIndex, 10);
       openPreviewModal(appState.documents[docIndex]);
     });
   });
 
   // Delete button
-  document.querySelectorAll('.document-delete-btn').forEach((btn) => {
+  document.querySelectorAll('.source-delete-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const docIndex = btn.closest('.document-item').dataset.docIndex;
+      const docIndex = parseInt(btn.dataset.docIndex, 10);
       deleteDocument(docIndex);
     });
   });
@@ -372,40 +486,66 @@ function renderDocuments() {
   if (window.lucide) lucide.createIcons();
 }
 
-function createDocumentItem(doc, index) {
+function createSourceCard(doc, index) {
   const docIdentifier = doc.path || doc.name;
   const isSelected = appState.selectedSources.includes(docIdentifier);
   const type = doc.type === 'file' ? getFileType(doc.name).toUpperCase() : 'WEB';
   const icon = getDocumentIcon(doc);
 
   return `
-    <div class="document-item ${isSelected ? 'selected' : ''}" data-doc-index="${index}">
-      <div class="document-icon">${icon}</div>
-      <div class="document-info">
-        <div class="document-name" title="${escapeHtml(doc.name)}">${escapeHtml(doc.name)}</div>
-        <div class="document-meta">
-          <span class="doc-badge">${type}</span>
-          <span>•</span>
-          <span class="doc-status-indexed">Indexed &amp; Grounded</span>
-          ${isSelected ? '<span class="doc-badge" style="background:#e3fcef;color:#006644;">Active Focus</span>' : ''}
+    <div class="source-card ${isSelected ? 'selected' : ''}" data-doc-index="${index}">
+      <div class="source-card-header">
+        <span class="source-card-type-badge">${icon} ${type}</span>
+        <span class="source-card-status">● Grounded</span>
+      </div>
+
+      <div class="source-card-body">
+        <div class="source-card-title" title="${escapeHtml(doc.name)}">${escapeHtml(doc.name)}</div>
+        <div class="source-card-meta">
+          <span>${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Active Session'}</span>
+          <span>&bull;</span>
+          <span>${isSelected ? '<strong style="color:#10B981;">Active Focus</strong>' : 'Ready for RAG'}</span>
         </div>
       </div>
-      <div class="document-actions">
-        <button class="document-action-btn document-preview-btn" title="Preview Document">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
+
+      <div class="source-card-footer">
+        <button class="source-action-btn source-chat-btn" data-doc-index="${index}" title="Ask AI Tutor about this document">
+          💬 Chat
         </button>
-        <button class="document-action-btn document-delete-btn" title="Remove Source">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          </svg>
-        </button>
+        <div class="source-card-actions">
+          <button class="source-action-btn source-preview-btn" data-doc-index="${index}" title="Preview Document">
+            👁️ Preview
+          </button>
+          <button class="source-action-btn delete-btn source-delete-btn" data-doc-index="${index}" title="Remove Source">
+            &times;
+          </button>
+        </div>
       </div>
     </div>
   `;
+}
+
+function chatWithSource(index) {
+  const doc = appState.documents[index];
+  if (!doc) return;
+  const docId = doc.path || doc.name;
+  appState.selectedSources = [docId];
+  renderDocuments();
+  updateSourceFilterBadge();
+  switchTab('chat');
+
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.placeholder = `Ask a question grounded specifically on ${doc.name}...`;
+    input.focus();
+  }
+}
+
+function selectAllSources() {
+  appState.selectedSources = [];
+  renderDocuments();
+  updateSourceFilterBadge();
+  showToast('Focused on all uploaded sources', 'info');
 }
 
 function toggleSourceSelection(index) {
@@ -449,7 +589,7 @@ function filterDocuments(query) {
   const container = document.getElementById('sources-list');
   if (!container) return;
 
-  const items = container.querySelectorAll('.document-item');
+  const items = container.querySelectorAll('.source-card');
   items.forEach((item) => {
     const docIndex = item.dataset.docIndex;
     const doc = appState.documents[docIndex];
@@ -642,9 +782,38 @@ async function ingestDocuments() {
   }
 }
 
-function openAddSourceModal() {
+async function loadSampleDataset() {
+  if (appState.isLoading) return;
+  appState.isLoading = true;
+  showToast('⚡ Loading Quantum Computing demo notebook...', 'info');
+
+  try {
+    const res = await fetch('/api/documents/sample', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✓ Quantum Computing Primer loaded', 'success');
+      await loadDocuments();
+      await ingestDocuments();
+    } else {
+      showToast(data.error || 'Error loading sample dataset', 'error');
+    }
+  } catch (err) {
+    console.error('Sample loading error:', err);
+    showToast('Failed to load sample dataset', 'error');
+  } finally {
+    appState.isLoading = false;
+  }
+}
+
+function openAddSourceModal(mode = 'file') {
   const modal = document.getElementById('add-source-modal-backdrop');
   if (modal) modal.classList.add('active');
+  if (mode === 'web') {
+    const webInput = document.getElementById('web-source-input');
+    if (webInput) {
+      setTimeout(() => webInput.focus(), 150);
+    }
+  }
 }
 
 function closeAddSourceModal() {
@@ -668,7 +837,7 @@ function openPreviewModal(doc) {
   if (metaEl) metaEl.textContent = `${doc.type.toUpperCase()} • Indexed into session`;
   if (contentEl) {
     contentEl.innerHTML = `
-      <div style="padding:16px;background:var(--soft-stone);border-radius:8px;font-family:var(--font-mono);font-size:13px;line-height:1.6;">
+      <div style="padding:16px;background:var(--bg-surface-alt);border:1px solid var(--border-color);border-radius:8px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text-main);">
         <strong>Document Path:</strong> ${escapeHtml(doc.path)}<br>
         <strong>Ingested At:</strong> ${doc.uploaded_at || 'Active Session'}<br><br>
         <p style="color:var(--text-muted);">
@@ -957,14 +1126,12 @@ function setTheme(theme) {
   applyTheme(theme);
   localStorage.setItem('theme', theme);
 
-  const darkBtn = document.getElementById('theme-dark-btn');
-  const lightBtn = document.getElementById('theme-light-btn');
-  if (darkBtn) darkBtn.classList.remove('primary');
-  if (lightBtn) lightBtn.classList.remove('primary');
-  if (theme === 'dark' && darkBtn) {
-    darkBtn.classList.add('primary');
-  } else if (lightBtn) {
-    lightBtn.classList.add('primary');
+  const toggle = document.getElementById('settings-theme-toggle');
+  if (toggle) toggle.checked = (theme === 'dark');
+
+  const statusText = document.getElementById('settings-theme-status-text');
+  if (statusText) {
+    statusText.textContent = theme === 'dark' ? 'Dark theme is currently active' : 'Light canvas is currently active';
   }
 }
 
@@ -1030,14 +1197,12 @@ function openSettingsModal() {
   const levelEl = document.getElementById('settings-level');
   if (levelEl) levelEl.value = appState.currentLevel;
 
-  const darkBtn = document.getElementById('theme-dark-btn');
-  const lightBtn = document.getElementById('theme-light-btn');
-  if (darkBtn) darkBtn.classList.remove('primary');
-  if (lightBtn) lightBtn.classList.remove('primary');
-  if (appState.theme === 'dark' && darkBtn) {
-    darkBtn.classList.add('primary');
-  } else if (lightBtn) {
-    lightBtn.classList.add('primary');
+  const toggle = document.getElementById('settings-theme-toggle');
+  if (toggle) toggle.checked = (appState.theme === 'dark');
+
+  const statusText = document.getElementById('settings-theme-status-text');
+  if (statusText) {
+    statusText.textContent = appState.theme === 'dark' ? 'Dark theme is currently active' : 'Light canvas is currently active';
   }
 
   const modal = document.getElementById('settings-modal-backdrop');
