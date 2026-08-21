@@ -1846,6 +1846,15 @@ a {
   animation: fadeIn 0.25s ease-out;
 }
 
+.empty-hub-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
 .empty-hub-avatar {
   width: 48px;
   height: 48px;
@@ -1856,7 +1865,8 @@ a {
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  margin-bottom: 16px;
+  margin: 0 auto 16px auto;
+  align-self: center;
   box-shadow: 0 4px 16px rgba(24, 99, 220, 0.25);
 }
 
@@ -1873,14 +1883,28 @@ a {
   color: var(--text-muted);
   max-width: 480px;
   line-height: 1.5;
-  margin-bottom: 24px;
+  margin: 0 auto 24px auto;
+  text-align: center;
+}
+
+.quick-prompts-title {
+  text-align: center;
+  margin: 0 auto 14px auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .quick-prompts-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
   gap: 12px;
   width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  justify-content: center;
 }
 
 .quick-prompt-card {
