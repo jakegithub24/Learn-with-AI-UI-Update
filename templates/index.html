@@ -297,16 +297,16 @@
         <p class="section-heading-sub">Turn raw document archives into high-yield revision artifacts with one click.</p>
       </div>
 
-      <div class="studio-filter-chips">
-        <button class="blog-filter-chip active">All Artifacts</button>
-        <button class="blog-filter-chip">📖 Study Guides</button>
-        <button class="blog-filter-chip">🃏 Flashcards</button>
-        <button class="blog-filter-chip">📝 Practice Quizzes</button>
-        <button class="blog-filter-chip">🧠 Mind Maps</button>
-        <button class="blog-filter-chip">📊 Executive Reports</button>
+      <div class="studio-filter-chips" id="studio-filter-chips">
+        <button class="blog-filter-chip active" data-filter="all">All Artifacts</button>
+        <button class="blog-filter-chip" data-filter="guide">📖 Study Guides</button>
+        <button class="blog-filter-chip" data-filter="flashcards">🃏 Flashcards</button>
+        <button class="blog-filter-chip" data-filter="quiz">📝 Practice Quizzes</button>
+        <button class="blog-filter-chip" data-filter="mindmap">🧠 Mind Maps</button>
+        <button class="blog-filter-chip" data-filter="report">📊 Executive Reports</button>
       </div>
 
-      <div class="research-table">
+      <div class="research-table" id="studio-research-table">
         <div class="research-table-row header-row">
           <div class="col-title">Artifact Type</div>
           <div class="col-purpose">Pedagogical Purpose</div>
@@ -314,7 +314,7 @@
           <div class="col-action">Action</div>
         </div>
 
-        <div class="research-table-row">
+        <div class="research-table-row" data-category="guide">
           <div class="col-title">
             <strong>Study Guide</strong>
             <span class="table-subtag">Synthesis</span>
@@ -324,7 +324,7 @@
           <div class="col-action"><a href="/app" class="button-pill-outline">Generate in App &rarr;</a></div>
         </div>
 
-        <div class="research-table-row">
+        <div class="research-table-row" data-category="flashcards">
           <div class="col-title">
             <strong>Active Recall Flashcards</strong>
             <span class="table-subtag">Retention</span>
@@ -334,7 +334,7 @@
           <div class="col-action"><a href="/app" class="button-pill-outline">Generate in App &rarr;</a></div>
         </div>
 
-        <div class="research-table-row">
+        <div class="research-table-row" data-category="quiz">
           <div class="col-title">
             <strong>Formative Practice Quiz</strong>
             <span class="table-subtag">Assessment</span>
@@ -344,7 +344,7 @@
           <div class="col-action"><a href="/app" class="button-pill-outline">Generate in App &rarr;</a></div>
         </div>
 
-        <div class="research-table-row">
+        <div class="research-table-row" data-category="mindmap">
           <div class="col-title">
             <strong>Hierarchical Concept Map</strong>
             <span class="table-subtag">Structure</span>
@@ -354,7 +354,7 @@
           <div class="col-action"><a href="/app" class="button-pill-outline">Generate in App &rarr;</a></div>
         </div>
 
-        <div class="research-table-row">
+        <div class="research-table-row" data-category="report">
           <div class="col-title">
             <strong>Academic Briefing Report</strong>
             <span class="table-subtag">Executive</span>
@@ -446,4 +446,32 @@
     </div>
   </footer>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const chips = document.querySelectorAll('.studio-filter-chips .blog-filter-chip');
+    const rows = document.querySelectorAll('.research-table .research-table-row:not(.header-row)');
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        // Toggle active chip
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+
+        const filter = chip.getAttribute('data-filter') || 'all';
+
+        rows.forEach(row => {
+          const category = row.getAttribute('data-category');
+          if (filter === 'all' || category === filter) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
 {% endblock %}
