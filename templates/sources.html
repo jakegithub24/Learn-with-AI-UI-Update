@@ -71,9 +71,9 @@
         <span class="launchpad-card-arrow">&rarr;</span>
       </div>
 
-      <div class="launchpad-card" onclick="openAddSourceModal();">
+      <div class="launchpad-card" onclick="openAddSourceModal('web');">
         <div class="launchpad-card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="2" x2="12" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
         </div>
         <div class="launchpad-card-body">
           <div class="launchpad-card-title">Web References</div>
@@ -96,8 +96,10 @@
 
     <!-- Direct Drop Trigger Zone -->
     <div class="launchpad-drop-hint" onclick="openAddSourceModal();">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-      <span>Click or drag files directly anywhere to upload</span>
+      <div class="drop-hint-left">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        <span>Click or drag files directly anywhere to upload</span>
+      </div>
       <div class="launchpad-format-tags">
         <span class="format-pill">PDF</span>
         <span class="format-pill">TXT</span>

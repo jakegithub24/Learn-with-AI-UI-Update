@@ -2425,6 +2425,8 @@ a {
   display: block;
   margin-bottom: 6px;
   text-transform: uppercase;
+}
+
 .settings-theme-row {
   display: flex;
   align-items: center;
@@ -2550,10 +2552,10 @@ a {
 }
 
 .sources-empty-launchpad {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -2562,7 +2564,7 @@ a {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   width: 100%;
   max-width: 680px;
-  margin: auto auto !important;
+  margin: auto auto;
   align-self: center;
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -2731,6 +2733,12 @@ a {
   border-color: var(--action-blue);
   color: var(--text-main);
   background-color: var(--bg-surface);
+}
+
+.drop-hint-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .launchpad-format-tags {
