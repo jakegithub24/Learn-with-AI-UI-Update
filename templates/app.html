@@ -120,7 +120,7 @@
         <div class="sidebar-section">
           <div class="sidebar-section-title">Library</div>
           <nav>
-            <div class="sidebar-nav-item" data-tab="recent">
+            <div class="sidebar-nav-item {% if not feature_recent_topics %}disabled-nav-item{% endif %}" data-tab="recent" {% if not feature_recent_topics %}data-disabled="true" onclick="showComingSoonModal('Recent Topics', 'The Recent Topics feature index is currently in preview and will be enabled in an upcoming release.');"{% endif %}>
               <div class="sidebar-nav-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -128,14 +128,20 @@
                 </svg>
               </div>
               <span>Recent Topics</span>
+              {% if not feature_recent_topics %}
+                <span class="sidebar-soon-badge">Soon</span>
+              {% endif %}
             </div>
-            <div class="sidebar-nav-item" data-tab="summaries">
+            <div class="sidebar-nav-item {% if not feature_saved_summaries %}disabled-nav-item{% endif %}" data-tab="summaries" {% if not feature_saved_summaries %}data-disabled="true" onclick="showComingSoonModal('Saved Summaries', 'The Saved Summaries & Notes repository is currently in preview and will be enabled in an upcoming release.');"{% endif %}>
               <div class="sidebar-nav-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                 </svg>
               </div>
               <span>Saved Summaries</span>
+              {% if not feature_saved_summaries %}
+                <span class="sidebar-soon-badge">Soon</span>
+              {% endif %}
             </div>
           </nav>
         </div>
@@ -157,7 +163,7 @@
       {% include "sources.html" %}
       {% include "ai_tutor_and_chat.html" %}
       {% include "study_studio.html" %}
-      {% include "rencent_topics.html" %}
+      {% include "recent_topics.html" %}
       {% include "saved_summaries.html" %}
     </main>
   </div>
@@ -287,6 +293,31 @@
     </div>
     <div class="modal-body" id="preview-content">
       <!-- Preview content rendered dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- Coming Soon Modal -->
+<div id="coming-soon-modal-backdrop" class="modal-backdrop">
+  <div class="modal coming-soon-modal">
+    <div class="modal-header">
+      <div class="coming-soon-badge">
+        <span class="coming-soon-dot"></span> In Active Development
+      </div>
+      <button class="modal-close-btn" onclick="closeComingSoonModal();">&times;</button>
+    </div>
+    <div class="modal-body coming-soon-body">
+      <div class="coming-soon-icon">🚀</div>
+      <h3 id="coming-soon-feature-title" class="coming-soon-title">Feature - Coming Soon...</h3>
+      <p id="coming-soon-feature-desc" class="coming-soon-desc">
+        This capability is currently locked in preview and will be unlocked in an upcoming release.
+      </p>
+      <div class="coming-soon-tag-row">
+        <span class="format-pill">Upcoming Release</span>
+      </div>
+    </div>
+    <div class="modal-footer coming-soon-footer">
+      <button class="button-primary btn-sm" onclick="closeComingSoonModal();">Got it</button>
     </div>
   </div>
 </div>

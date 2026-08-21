@@ -856,6 +856,21 @@ function closePreviewModal() {
   if (modal) modal.classList.remove('active');
 }
 
+function showComingSoonModal(featureName = 'Feature', featureDesc = '') {
+  const modal = document.getElementById('coming-soon-modal-backdrop');
+  const title = document.getElementById('coming-soon-feature-title');
+  const desc = document.getElementById('coming-soon-feature-desc');
+
+  if (title) title.textContent = `${featureName} - Coming Soon...`;
+  if (desc && featureDesc) desc.textContent = featureDesc;
+  if (modal) modal.classList.add('active');
+}
+
+function closeComingSoonModal() {
+  const modal = document.getElementById('coming-soon-modal-backdrop');
+  if (modal) modal.classList.remove('active');
+}
+
 /* ============================================================================
    AI TUTOR & CHAT
    ============================================================================ */

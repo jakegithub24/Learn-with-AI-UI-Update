@@ -104,6 +104,15 @@ def cleanup_old_sessions():
         del session_data[session_id]
 
 
+@app.context_processor
+def inject_feature_flags():
+    """Inject feature flags into all templates dynamically"""
+    return {
+        'feature_recent_topics': os.getenv('FEATURE_RECENT_TOPICS', 'false').lower() in ('1', 'true', 'yes'),
+        'feature_saved_summaries': os.getenv('FEATURE_SAVED_SUMMARIES', 'false').lower() in ('1', 'true', 'yes'),
+    }
+
+
 @app.route('/')
 def index():
     """SaaS Landing Page for app.learnwithai.ai"""
