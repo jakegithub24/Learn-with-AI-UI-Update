@@ -1353,6 +1353,9 @@ a {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+  background-color: var(--bg-page);
 }
 
 .workspace-title-group h2 {
@@ -1467,6 +1470,9 @@ a {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
   align-content: flex-start;
+  padding-top: 6px;
+  padding-left: 2px;
+  padding-right: 2px;
   padding-bottom: 20px;
 }
 
@@ -1487,6 +1493,7 @@ a {
   border-color: var(--action-blue);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
+  z-index: 1;
 }
 
 .source-card.selected {
@@ -2068,6 +2075,9 @@ a {
   gap: 16px;
   overflow-y: auto;
   flex: 1;
+  padding-top: 6px;
+  padding-left: 2px;
+  padding-right: 2px;
   padding-bottom: 16px;
 }
 
@@ -2081,12 +2091,14 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
 }
 
 .studio-card:hover {
   border-color: var(--action-blue);
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  z-index: 1;
 }
 
 .studio-icon-wrap {
@@ -2143,6 +2155,9 @@ a {
   gap: 16px;
   overflow-y: auto;
   flex: 1;
+  padding-top: 6px;
+  padding-left: 2px;
+  padding-right: 2px;
   padding-bottom: 20px;
 }
 
@@ -2156,12 +2171,14 @@ a {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
 }
 
 .topic-card:hover {
   border-color: var(--action-blue);
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  z-index: 1;
 }
 
 .topic-card-header {
@@ -2225,6 +2242,9 @@ a {
   gap: 16px;
   overflow-y: auto;
   flex: 1;
+  padding-top: 6px;
+  padding-left: 2px;
+  padding-right: 2px;
   padding-bottom: 20px;
 }
 
@@ -2238,12 +2258,14 @@ a {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
 }
 
 .summary-card:hover {
   border-color: var(--action-blue);
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  z-index: 1;
 }
 
 .summary-card-header {
